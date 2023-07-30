@@ -10,6 +10,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
+    
     public function register(): void
     {
         //
@@ -32,8 +33,11 @@ class AppServiceProvider extends ServiceProvider
         ]);
     
         // Throw error if anything tries to use MySQL
-        $this->app['db']->extend('mysql', function () {
-            throw new Exception("MySQL is disabled in this application. Please use PostgreSQL instead.");
-        });
+            \DB::extend('mysql', function () {
+        throw new \RuntimeException(
+            "ILLEGAL MYSQL ATTEMPT. Current config: " . 
+            json_encode(config('database.connections.pgsql'), JSON_PRETTY_PRINT)
+        );
+    });
     }
 }

@@ -141,3 +141,10 @@ Route::post('/update-role', [SettingController::class, 'updateRole']);
 Route::get('/admin/stats', [SettingController::class, 'getUserStats']);
     // Route::get('/users', [UserController::class, 'getUsers']);
     // Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
+Route::get('/api/test', function() {
+    return [
+        'db_driver' => \DB::connection()->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME),
+        'status' => 'OK'
+    ];
+});
