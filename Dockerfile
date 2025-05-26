@@ -47,9 +47,9 @@ RUN docker-php-ext-install -j2 \
     fileinfo
 
 # Clean up PECL cache and remove xdebug if it's installed
-RUN pecl clear-cache \
-    && rm -rf /tmp/pear ~/.pearrc \
-    && [ -f /usr/local/etc/php/conf.d/xdebug.ini ] && rm /usr/local/etc/php/conf.d/xdebug.ini
+# RUN pecl clear-cache \
+#     && rm -rf /tmp/pear ~/.pearrc \
+#     && [ -f /usr/local/etc/php/conf.d/xdebug.ini ] && rm /usr/local/etc/php/conf.d/xdebug.ini
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
