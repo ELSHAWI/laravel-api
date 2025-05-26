@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libcurl4-gnutls-dev \
     libicu-dev \
+    libmagic-dev \
     # Add other system libraries here if your project needs them, e.g., libpq-dev for PostgreSQL
     && rm -rf /var/lib/apt/lists/* \
     \
