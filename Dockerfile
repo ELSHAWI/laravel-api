@@ -17,25 +17,31 @@ RUN apt-get update && apt-get install -y \
 # Configure Apache ServerName to suppress warnings
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Install Composer
+# Install Composer (with safety checks)
 RUN curl -sS https://getcomposer.org/installer | php -- \
-    --install-dir=/usr/local/bin --filename=composer
+    --install-dir=/usr/local/bin --filename=composer \
+    --version=2.6.6 && \
+    chmod +x /usr/local/bin/composer
 
 # Copy ONLY composer files first
 COPY composer.json composer.lock ./
 
-# Install dependencies (without running scripts)
-RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
-
-# Generate autoload files
-RUN composer dump-autoload --optimize
+# Install dependencies (skip all scripts)
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install \
+    --no-dev \
+    --no-scripts \
+    --no-autoloader \
+    --no-interaction
 
 # Copy the entire application
 COPY . .
 
-# Fix permissions FIRST before running any artisan commands
+# Fix permissions
 RUN chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
+
+# Generate optimized autoload (without triggering scripts)
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize --no-scripts
 
 # Now safe to run artisan commands
 RUN if [ ! -f ".env" ]; then \
