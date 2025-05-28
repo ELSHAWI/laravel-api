@@ -43,6 +43,23 @@ RUN chown -R www-data:www-data storage bootstrap/cache && \
 # Generate optimized autoload (without triggering scripts)
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize --no-scripts
 
+# Configure Apache virtual host (FIXED VERSION)
+RUN mkdir -p /etc/apache2/sites-available/ && \
+    mkdir -p /etc/apache2/sites-enabled/ && \
+    echo "<VirtualHost *:80>\n\
+    ServerName localhost\n\
+    ServerAdmin webmaster@localhost\n\
+    DocumentRoot /var/www/html/public\n\n\
+    <Directory /var/www/html/public>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+        Options Indexes FollowSymLinks\n\
+    </Directory>\n\n\
+    ErrorLog \${APACHE_LOG_DIR}/error.log\n\
+    CustomLog \${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>" > /etc/apache2/sites-available/000-default.conf && \
+    ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/000-default.conf
+
 # Now safe to run artisan commands
 RUN if [ ! -f ".env" ]; then \
         cp .env.example .env && \
@@ -53,23 +70,6 @@ RUN if [ ! -f ".env" ]; then \
     php artisan route:clear && \
     php artisan view:clear && \
     php artisan cache:clear
-
-# Configure Apache virtual host
-RUN echo "<VirtualHost *:80>\n\
-    ServerName localhost\n\
-    ServerAdmin webmaster@localhost\n\
-    DocumentRoot /var/www/html/public\n\
-    \n\
-    <Directory /var/www/html/public>\n\
-        AllowOverride All\n\
-        Require all granted\n\
-        Options Indexes FollowSymLinks\n\
-    </Directory>\n\
-    \n\
-    ErrorLog \${APACHE_LOG_DIR}/error.log\n\
-    CustomLog \${APACHE_LOG_DIR}/access.log combined\n\
-</VirtualHost>" > /etc/apache2/sites-available/000-default.conf && \
-    a2ensite 000-default.conf
 
 # Production optimizations (run last)
 RUN php artisan config:cache && \
