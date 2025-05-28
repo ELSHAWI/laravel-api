@@ -22,5 +22,14 @@ class AppServiceProvider extends ServiceProvider
         if (env('APP_ENV') == 'production') {
             $this->app['request']->server->set('HTTPS', true);
         }
+          config([
+        'database.default' => 'pgsql',
+        'database.connections.mysql' => null // Disable MySQL completely
+    ]);
+    
+    // Block any MySQL connection attempts
+    app('db')->extend('mysql', function() {
+        throw new \Exception("MySQL is disabled. Use PostgreSQL.");
+    });
     }
 }
