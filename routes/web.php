@@ -31,3 +31,11 @@ Route::get('/preview-pdf/{filename}', function ($filename) {
         'Content-Disposition' => 'inline; filename="'.$filename.'"'
     ]);
 })->middleware('web'); // Add web middleware if not already applied
+
+Route::get('/db-debug', function() {
+    return [
+        'configured_connection' => config('database.default'),
+        'actual_connection' => DB::connection()->getPdo()->getAttribute(PDO::ATTR_DRIVER_NAME),
+        'mysql_attempt' => DB::connection('mysql')->getPdo() // Should throw exception
+    ];
+});
