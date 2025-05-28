@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class QuestionOption extends Model
 {
     use HasFactory;
+    protected $connection = 'pgsql'; // ← Add this line
 
     protected $fillable = [
         'question_id',

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Course extends Model
 {
     use HasFactory;
+    protected $connection = 'pgsql'; // ← Add this line
+
     protected $fillable = [
         'title', 'subtitle', 'teacher', 'video_path', 'summary_path',
         'for_who', 'term', 'grade', 'college', 'description',

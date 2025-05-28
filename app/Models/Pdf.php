@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pdf extends Model
 {
     use HasFactory;
+    protected $connection = 'pgsql'; // ← Add this lin
     protected $fillable = [
     'title',
     'subtitle',
