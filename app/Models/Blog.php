@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Blog extends Model
 {
     use HasFactory;
+    protected $connection = 'pgsql'; // ← Add this line
+
     protected $fillable = ['title', 'content', 'date', 'author', 'category', 'image', 'read_time'];
     
     public function comments()

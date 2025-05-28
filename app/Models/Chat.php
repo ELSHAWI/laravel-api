@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Chat extends Model
 {
     use HasFactory;
+protected $connection = 'pgsql'; // ← Add this line
 
     protected $fillable = ['user_id', 'message', 'attachment'];
     

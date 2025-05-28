@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Comment extends Model
 {
     use HasFactory;
+    protected $connection = 'pgsql'; // ← Add this line
+
     public function blog()
     {
         return $this->belongsTo(Blog::class);
