@@ -11,13 +11,28 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
-        pdo pdo_pgsql pgsql zip gd bcmath mbstring exif opcache intl xml curl dom fileinfo \
-    && a2enmod rewrite
+        pdo pdo_pgsql pgsql zip gd bcmath mbstring exif opcache intl xml curl dom fileinfo
 
-# Configure Apache ServerName to suppress warnings
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+# Configure Apache
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
+    a2enmod rewrite && \
+    rm -f /etc/apache2/sites-enabled/* && \
+    rm -f /etc/apache2/sites-available/* && \
+    echo "<VirtualHost *:80>\n\
+    ServerName localhost\n\
+    ServerAdmin webmaster@localhost\n\
+    DocumentRoot /var/www/html/public\n\n\
+    <Directory /var/www/html/public>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+        Options Indexes FollowSymLinks\n\
+    </Directory>\n\n\
+    ErrorLog \${APACHE_LOG_DIR}/error.log\n\
+    CustomLog \${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>" > /etc/apache2/sites-available/000-default.conf && \
+    ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/
 
-# Install Composer (with safety checks)
+# Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- \
     --install-dir=/usr/local/bin --filename=composer \
     --version=2.6.6 && \
@@ -42,23 +57,6 @@ RUN chown -R www-data:www-data storage bootstrap/cache && \
 
 # Generate optimized autoload (without triggering scripts)
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize --no-scripts
-
-# Configure Apache virtual host (FIXED VERSION)
-RUN mkdir -p /etc/apache2/sites-available/ && \
-    mkdir -p /etc/apache2/sites-enabled/ && \
-    echo "<VirtualHost *:80>\n\
-    ServerName localhost\n\
-    ServerAdmin webmaster@localhost\n\
-    DocumentRoot /var/www/html/public\n\n\
-    <Directory /var/www/html/public>\n\
-        AllowOverride All\n\
-        Require all granted\n\
-        Options Indexes FollowSymLinks\n\
-    </Directory>\n\n\
-    ErrorLog \${APACHE_LOG_DIR}/error.log\n\
-    CustomLog \${APACHE_LOG_DIR}/access.log combined\n\
-</VirtualHost>" > /etc/apache2/sites-available/000-default.conf && \
-    ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
 # Now safe to run artisan commands
 RUN if [ ! -f ".env" ]; then \
