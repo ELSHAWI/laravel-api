@@ -31,6 +31,7 @@ Route::get('/preview-pdf/{filename}', function ($filename) {
         'Content-Disposition' => 'inline; filename="'.$filename.'"'
     ]);
 })->middleware('web'); // Add web middleware if not already applied
+Route::get('/users', [UserController::class, 'index']);
 
 Route::get('/debug-db', function() {
     $e = new Exception;
