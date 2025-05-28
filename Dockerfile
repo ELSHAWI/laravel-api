@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y \
 # Configure Apache
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
     a2enmod rewrite && \
-    rm -f /etc/apache2/sites-enabled/* && \
-    rm -f /etc/apache2/sites-available/* && \
+    rm -rf /etc/apache2/sites-enabled/* && \
+    rm -rf /etc/apache2/sites-available/* && \
     echo "<VirtualHost *:80>\n\
     ServerName localhost\n\
     ServerAdmin webmaster@localhost\n\
@@ -25,54 +25,62 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
     <Directory /var/www/html/public>\n\
         AllowOverride All\n\
         Require all granted\n\
-        Options Indexes FollowSymLinks\n\
+        FallbackResource /index.php\n\
     </Directory>\n\n\
     ErrorLog \${APACHE_LOG_DIR}/error.log\n\
     CustomLog \${APACHE_LOG_DIR}/access.log combined\n\
 </VirtualHost>" > /etc/apache2/sites-available/000-default.conf && \
     ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/
 
-# Install Composer
+# Install Composer (latest stable version)
 RUN curl -sS https://getcomposer.org/installer | php -- \
-    --install-dir=/usr/local/bin --filename=composer \
-    --version=2.6.6 && \
+    --install-dir=/usr/local/bin --filename=composer && \
     chmod +x /usr/local/bin/composer
 
-# Copy ONLY composer files first
+# Copy ONLY composer files first for caching
 COPY composer.json composer.lock ./
 
-# Install dependencies (skip all scripts)
+# Install dependencies (optimized for production)
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install \
     --no-dev \
+    --no-interaction \
     --no-scripts \
     --no-autoloader \
-    --no-interaction
+    --ignore-platform-reqs
 
 # Copy the entire application
 COPY . .
 
-# Fix permissions
+# Set proper permissions
 RUN chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
 
-# Generate optimized autoload (without triggering scripts)
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize --no-scripts
+# Generate optimized autoloader
+RUN composer dump-autoload --optimize
 
-# Now safe to run artisan commands
+# Environment setup (safe to run in container)
 RUN if [ ! -f ".env" ]; then \
         cp .env.example .env && \
         php artisan key:generate --force; \
-    fi && \
-    php artisan storage:link && \
-    php artisan config:clear && \
+    fi
+
+# Clear all caches
+RUN php artisan config:clear && \
     php artisan route:clear && \
     php artisan view:clear && \
     php artisan cache:clear
 
-# Production optimizations (run last)
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+# Production optimizations (only in production)
+ARG APP_ENV=production
+RUN if [ "$APP_ENV" = "production" ]; then \
+        php artisan config:cache && \
+        php artisan route:cache && \
+        php artisan view:cache; \
+    fi
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD curl -f http://localhost/ || exit 1
 
 EXPOSE 80
 CMD ["apache2-foreground"]
