@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Exception;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,19 +18,22 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot()
+    public function boot(): void
     {
-        if (env('APP_ENV') == 'production') {
+        // Force HTTPS in production
+        if ($this->app->environment('production')) {
             $this->app['request']->server->set('HTTPS', true);
         }
-          config([
-        'database.default' => 'pgsql',
-        'database.connections.mysql' => null // Disable MySQL completely
-    ]);
+
+        // Set PostgreSQL as default and disable MySQL
+        config([
+            'database.default' => 'pgsql',
+            'database.connections.mysql' => null
+        ]);
     
-    // Block any MySQL connection attempts
-    app('db')->extend('mysql', function() {
-        throw new \Exception("MySQL is disabled. Use PostgreSQL.");
-    });
+        // Throw error if anything tries to use MySQL
+        $this->app['db']->extend('mysql', function () {
+            throw new Exception("MySQL is disabled in this application. Please use PostgreSQL instead.");
+        });
     }
 }

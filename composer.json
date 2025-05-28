@@ -75,6 +75,9 @@
             "pestphp/pest-plugin": true
         }
     },
+    "replace": {
+        "doctrine/dbal": "*"
+    },
     "minimum-stability": "stable",
     "prefer-stable": true
 }
