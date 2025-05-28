@@ -76,7 +76,12 @@
         }
     },
     "replace": {
-        "doctrine/dbal": "*"
+        "doctrine/dbal": "*", 
+        "mysql-*": "*"             
+    },
+    "conflict": {
+        "doctrine/dbal": "*",       
+        "laravel/framework": "<10.0"
     },
     "minimum-stability": "stable",
     "prefer-stable": true
