@@ -32,10 +32,13 @@ Route::get('/preview-pdf/{filename}', function ($filename) {
     ]);
 })->middleware('web'); // Add web middleware if not already applied
 
-Route::get('/db-debug', function() {
-    return [
-        'configured_connection' => config('database.default'),
-        'actual_connection' => DB::connection()->getPdo()->getAttribute(PDO::ATTR_DRIVER_NAME),
-        'mysql_attempt' => DB::connection('mysql')->getPdo() // Should throw exception
-    ];
+Route::get('/debug-db', function() {
+    $e = new Exception;
+    return response()->json([
+        'config_connection' => config('database.default'),
+        'backtrace' => collect(debug_backtrace())
+            ->pluck('file')
+            ->filter(fn($f) => str_contains($f, 'app/'))
+            ->values()
+    ]);
 });
