@@ -36,18 +36,9 @@ Route::get('/preview-pdf/{filename}', function ($filename) {
 Route::get('/users', [UserController::class, 'index']);
 
 
-Route::get('/debug-db', function () {
-    DB::listen(function ($query) {
-        if ($query->connectionName === 'mysql') {
-            Log::emergency('MySQL QUERY ATTEMPT', [
-                'sql' => $query->sql,
-                'backtrace' => collect(debug_backtrace())
-                    ->reject(fn($t) => str_contains($t['file'] ?? '', 'vendor'))
-                    ->values()
-            ]);
-        }
-    });
-
-    // Trigger your failing route
-    return app()->call('App\Http\Controllers\UserController@index');
+Route::get('/api/test', function() {
+    return [
+        'db_driver' => \DB::connection()->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME),
+        'status' => 'OK'
+    ];
 });
